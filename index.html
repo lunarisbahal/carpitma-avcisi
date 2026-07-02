@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Çarpıtma Avcısı · Distortion Hunter</title>
+<style>
+  :root{
+    --bg:#f2f6f5; --card:#ffffff; --ink:#2b3a38; --muted:#6b7f7c;
+    --accent:#2f7d6d; --accent-soft:#e3efec; --accent-dark:#22594e;
+    --ok:#2e7d4f; --ok-bg:#e8f4ec; --bad:#b04a3a; --bad-bg:#f9ece9;
+    --border:#dbe6e3; --shadow:0 2px 10px rgba(43,58,56,.07);
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.55; min-height:100vh;
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:16px 16px 48px;}
+  header.top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:18px 0 6px;}
+  .title h1{font-size:1.45rem; font-weight:700; color:var(--accent-dark); letter-spacing:.2px;}
+  .title p{font-size:.9rem; color:var(--muted); margin-top:2px;}
+  .langbox{display:flex; border:1px solid var(--border); border-radius:999px; overflow:hidden; background:var(--card); flex-shrink:0;}
+  .langbox button{border:0; background:transparent; padding:7px 14px; font-size:.85rem; cursor:pointer; color:var(--muted); font-weight:600;}
+  .langbox button.on{background:var(--accent); color:#fff;}
+  nav.tabs{display:flex; gap:10px; margin:18px 0 16px;}
+  nav.tabs button{
+    flex:1; padding:13px 10px; border-radius:var(--radius); border:1px solid var(--border);
+    background:var(--card); font-size:.95rem; font-weight:600; color:var(--muted); cursor:pointer;
+    box-shadow:var(--shadow); transition:all .15s;
+  }
+  nav.tabs button.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:22px; margin-bottom:16px;}
+  .panel h2{font-size:1.1rem; color:var(--accent-dark); margin-bottom:8px;}
+  .panel p.lead{color:var(--muted); font-size:.93rem; margin-bottom:14px;}
+  .btn{
+    display:inline-block; border:0; border-radius:10px; padding:12px 20px; font-size:.95rem; font-weight:600;
+    background:var(--accent); color:#fff; cursor:pointer; transition:background .15s;
+  }
+  .btn:hover{background:var(--accent-dark);}
+  .btn.ghost{background:var(--accent-soft); color:var(--accent-dark);}
+  .btn.small{padding:8px 14px; font-size:.85rem;}
+  .btn:disabled{opacity:.45; cursor:default;}
+  .rowbtns{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;}
+  .lenpick{display:flex; gap:10px; margin:12px 0 4px;}
+  .lenpick button{
+    flex:1; padding:10px; border-radius:10px; border:1.5px solid var(--border); background:#fff;
+    font-size:1rem; font-weight:700; color:var(--muted); cursor:pointer;
+  }
+  .lenpick button.on{border-color:var(--accent); color:var(--accent-dark); background:var(--accent-soft);}
+  .progress{display:flex; align-items:center; justify-content:space-between; font-size:.85rem; color:var(--muted); margin-bottom:10px;}
+  .pbar{height:6px; background:var(--accent-soft); border-radius:99px; overflow:hidden; margin-bottom:18px;}
+  .pbar i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .3s;}
+  .thought{
+    background:var(--accent-soft); border-radius:12px; padding:20px 18px; font-size:1.08rem; font-weight:600;
+    color:var(--accent-dark); text-align:center; margin-bottom:18px; font-style:italic;
+  }
+  .opts{display:grid; gap:10px;}
+  .opts button{
+    text-align:left; padding:13px 15px; border-radius:10px; border:1.5px solid var(--border); background:#fff;
+    font-size:.95rem; color:var(--ink); cursor:pointer; transition:all .12s; line-height:1.4;
+  }
+  .opts button:hover:not(:disabled){border-color:var(--accent);}
+  .opts button.correct{border-color:var(--ok); background:var(--ok-bg); font-weight:600;}
+  .opts button.wrong{border-color:var(--bad); background:var(--bad-bg);}
+  .opts button:disabled{cursor:default;}
+  .feedback{border-radius:10px; padding:14px 16px; margin-top:14px; font-size:.92rem; display:none;}
+  .feedback.ok{display:block; background:var(--ok-bg); border:1px solid #bcdcc8;}
+  .feedback.bad{display:block; background:var(--bad-bg); border:1px solid #e8c4bc;}
+  .feedback b{display:block; margin-bottom:4px;}
+  .scorebig{font-size:2.2rem; font-weight:800; color:var(--accent-dark); text-align:center; margin:8px 0 2px;}
+  .scoresub{text-align:center; color:var(--muted); font-size:.9rem; margin-bottom:16px;}
+  .blind{background:#fdf6e9; border:1px solid #ecdcb8; border-radius:12px; padding:16px; margin:14px 0; font-size:.93rem;}
+  .blind b{color:#8a6d1f;}
+  table.stats{width:100%; border-collapse:collapse; font-size:.88rem; margin-top:10px;}
+  table.stats th, table.stats td{padding:7px 8px; text-align:left; border-bottom:1px solid var(--border);}
+  table.stats th{color:var(--muted); font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.4px;}
+  label.f{display:block; font-weight:600; font-size:.93rem; margin-bottom:6px; color:var(--accent-dark);}
+  .hint{font-size:.83rem; color:var(--muted); margin-bottom:10px;}
+  textarea, input[type=text], select{
+    width:100%; border:1.5px solid var(--border); border-radius:10px; padding:11px 13px; font-size:.95rem;
+    font-family:inherit; color:var(--ink); background:#fff; resize:vertical;
+  }
+  textarea:focus, input:focus, select:focus{outline:none; border-color:var(--accent);}
+  textarea{min-height:88px;}
+  .slider-row{display:flex; align-items:center; gap:14px; margin-top:8px;}
+  input[type=range]{flex:1; accent-color:var(--accent); height:32px;}
+  .sval{font-size:1.3rem; font-weight:800; color:var(--accent-dark); min-width:52px; text-align:center;}
+  .remind{background:var(--accent-soft); border-radius:10px; padding:12px 14px; font-size:.9rem; margin-bottom:14px; color:var(--accent-dark);}
+  .dots{display:flex; gap:6px; justify-content:center; margin-bottom:16px;}
+  .dots i{width:9px; height:9px; border-radius:50%; background:var(--border);}
+  .dots i.on{background:var(--accent);}
+  .sumline{
+    background:var(--ok-bg); border:1px solid #bcdcc8; border-radius:12px; padding:16px; text-align:center;
+    font-size:1.05rem; font-weight:700; color:var(--ok); margin-bottom:14px;
+  }
+  .sumline.warn{background:#fdf6e9; border-color:#ecdcb8; color:#8a6d1f;}
+  dl.rec{font-size:.9rem;}
+  dl.rec dt{font-weight:700; color:var(--accent-dark); margin-top:12px; font-size:.83rem; text-transform:uppercase; letter-spacing:.3px;}
+  dl.rec dd{margin-top:3px; white-space:pre-wrap;}
+  details.thera{margin-top:22px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);}
+  details.thera summary{padding:15px 20px; cursor:pointer; font-weight:600; font-size:.9rem; color:var(--muted);}
+  details.thera .inner{padding:0 20px 20px;}
+  .cardlist{margin-top:14px; display:grid; gap:8px;}
+  .cardlist .ci{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--bg); border-radius:9px; padding:9px 12px; font-size:.86rem;}
+  .cardlist .ci .del{border:0; background:transparent; color:var(--bad); cursor:pointer; font-size:1rem; padding:4px;}
+  .cardlist .ci small{color:var(--muted); display:block;}
+  footer.eth{margin-top:26px; text-align:center; font-size:.78rem; color:var(--muted); line-height:1.6; padding:0 8px;}
+  .hidden{display:none !important;}
+  .copyok{color:var(--ok); font-size:.85rem; align-self:center; display:none;}
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block; position:absolute; left:0; top:0; width:100%; padding:24px; font-size:12pt; color:#000;}
+    #printArea h1{font-size:16pt; margin-bottom:4pt;}
+    #printArea h2{font-size:12pt; margin:10pt 0 3pt;}
+    #printArea p, #printArea li{font-size:10.5pt;}
+    #printArea .pmeta{color:#555; font-size:9pt; margin-bottom:10pt;}
+    #printArea .pnote{margin-top:14pt; font-size:8.5pt; color:#666; border-top:1px solid #ccc; padding-top:6pt;}
+    #printArea table{width:100%; border-collapse:collapse; font-size:10pt; margin-top:6pt;}
+    #printArea th, #printArea td{border:1px solid #bbb; padding:4pt 6pt; text-align:left;}
+  }
+  @media (max-width:480px){
+    .panel{padding:16px;}
+    .title h1{font-size:1.2rem;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+  <header class="top">
+    <div class="title">
+      <h1 id="t_title"></h1>
+      <p id="t_sub"></p>
+    </div>
+    <div class="langbox">
+      <button id="btnTR" onclick="setLang('tr')">TR</button>
+      <button id="btnEN" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button id="tabGame" onclick="showTab('game')"></button>
+    <button id="tabRec" onclick="showTab('rec')"></button>
+  </nav>
+
+  <!-- ================= MODE 1: GAME ================= -->
+  <section id="secGame">
+
+    <div class="panel" id="gIntro">
+      <h2 id="g_h"></h2>
+      <p class="lead" id="g_lead"></p>
+      <label class="f" id="g_lenlab"></label>
+      <div class="lenpick">
+        <button data-len="6" onclick="pickLen(6)">6</button>
+        <button data-len="8" class="on" onclick="pickLen(8)">8</button>
+        <button data-len="10" onclick="pickLen(10)">10</button>
+      </div>
+      <div class="rowbtns">
+        <button class="btn" id="g_start" onclick="startGame()"></button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="gPlay">
+      <div class="progress"><span id="g_qno"></span><span id="g_score"></span></div>
+      <div class="pbar"><i id="g_bar" style="width:0%"></i></div>
+      <div class="thought" id="g_thought"></div>
+      <p class="hint" id="g_ask"></p>
+      <div class="opts" id="g_opts"></div>
+      <div class="feedback" id="g_fb"></div>
+      <div class="rowbtns">
+        <button class="btn hidden" id="g_next" onclick="nextQ()"></button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="gEnd">
+      <h2 id="ge_h"></h2>
+      <div class="scorebig" id="ge_score"></div>
+      <div class="scoresub" id="ge_sub"></div>
+      <div class="blind" id="ge_blind"></div>
+      <table class="stats" id="ge_table"></table>
+      <div class="rowbtns">
+        <button class="btn" id="ge_again" onclick="startGame()"></button>
+        <button class="btn ghost" id="ge_pdf" onclick="printGame()"></button>
+        <button class="btn ghost" id="ge_copy" onclick="copyGame()"></button>
+        <span class="copyok" id="ge_copied"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODE 2: THOUGHT RECORD ================= -->
+  <section id="secRec" class="hidden">
+    <div class="panel" id="rWiz">
+      <div class="dots" id="r_dots"></div>
+      <div id="r_body"></div>
+      <div class="rowbtns">
+        <button class="btn ghost" id="r_back" onclick="recBack()"></button>
+        <button class="btn" id="r_next" onclick="recNext()"></button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="rEnd">
+      <h2 id="re_h"></h2>
+      <div class="sumline" id="re_delta"></div>
+      <dl class="rec" id="re_list"></dl>
+      <div class="rowbtns">
+        <button class="btn ghost" id="re_pdf" onclick="printRec()"></button>
+        <button class="btn ghost" id="re_copy" onclick="copyRec()"></button>
+        <button class="btn" id="re_new" onclick="recRestart()"></button>
+        <span class="copyok" id="re_copied"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= THERAPIST AREA ================= -->
+  <details class="thera" id="theraBox">
+    <summary id="th_sum"></summary>
+    <div class="inner">
+      <p class="hint" id="th_hint"></p>
+      <label class="f" id="th_l1"></label>
+      <textarea id="th_tr" rows="2"></textarea>
+      <label class="f" id="th_l2" style="margin-top:10px;"></label>
+      <textarea id="th_en" rows="2"></textarea>
+      <label class="f" id="th_l3" style="margin-top:10px;"></label>
+      <select id="th_type"></select>
+      <div class="rowbtns">
+        <button class="btn small" id="th_add" onclick="addCustom()"></button>
+        <button class="btn small ghost" id="th_exp" onclick="exportCustom()"></button>
+        <span class="copyok" id="th_copied"></span>
+      </div>
+      <div class="cardlist" id="th_list"></div>
+    </div>
+  </details>
+
+  <footer class="eth">
+    <p id="eth1"></p>
+    <p id="eth2" style="margin-top:6px;"></p>
+  </footer>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   TERAPİST KARTLARI (kalıcı):
+   Aşağıdaki köşeli parantezin içine, terapist bölümündeki
+   "JSON kopyala" düğmesiyle aldığınız kartları yapıştırırsanız
+   bu kartlar dosyayı açan HERKESTE görünür.
+   (Arayüzden eklenen kartlar yalnızca eklendiği cihazda saklanır.)
+   Örnek biçim:
+   {tr:"Düşünce metni", en:"Thought text", type:"mind"},
+   ===================================================================== */
+const THERAPIST_CARDS = [
+];
+
+/* ---------- 8 çarpıtma türü ---------- */
+const TYPES = {
+  cat:    {tr:{name:"Felaketleştirme", def:"Olası en kötü sonucu kesinmiş gibi görme; küçük bir olumsuzluğu felakete büyütme."},
+           en:{name:"Catastrophizing", def:"Treating the worst possible outcome as certain; blowing a small negative into a disaster."}},
+  mind:   {tr:{name:"Zihin okuma", def:"Kanıt olmadan başkalarının ne düşündüğünü ya da hissettiğini bildiğini varsayma."},
+           en:{name:"Mind reading", def:"Assuming you know what others think or feel without any evidence."}},
+  allnone:{tr:{name:"Ya hep ya hiç", def:"Olayları yalnızca iki uçta görme: mükemmel ya da başarısız, hep ya da hiç. Gri alan yok."},
+           en:{name:"All-or-nothing", def:"Seeing things in only two categories: perfect or failure, all or nothing. No middle ground."}},
+  overgen:{tr:{name:"Aşırı genelleme", def:"Tek bir olaydan yola çıkıp 'hep', 'asla', 'herkes' gibi geniş sonuçlar çıkarma."},
+           en:{name:"Overgeneralization", def:"Drawing broad conclusions like always, never, or everyone from a single event."}},
+  pers:   {tr:{name:"Kişiselleştirme", def:"Kontrolünde olmayan olumsuz olayların sorumluluğunu kendine yükleme."},
+           en:{name:"Personalization", def:"Blaming yourself for negative events that are not fully under your control."}},
+  filter: {tr:{name:"Zihinsel filtre", def:"Olumluları eleyip yalnızca olumsuz ayrıntıya odaklanma; tek damla mürekkebin bardağı karartması."},
+           en:{name:"Mental filter", def:"Filtering out the positives and dwelling only on a negative detail; one drop of ink darkening the glass."}},
+  should: {tr:{name:"-meli/-malı ifadeleri", def:"Kendine ya da başkalarına katı kurallar dayatma: 'yapmalıyım', 'olmamalı'. Kural bozulunca suçluluk ya da öfke doğar."},
+           en:{name:"Should-statements", def:"Imposing rigid rules on yourself or others: I must, they should not. Broken rules breed guilt or anger."}},
+  label:  {tr:{name:"Etiketleme", def:"Tek bir davranıştan bütün bir kimlik çıkarma: hata yapmak yerine 'başarısız biri' olmak."},
+           en:{name:"Labeling", def:"Turning one behavior into a whole identity: instead of making a mistake, being a failure."}}
+};
+const TYPE_KEYS = Object.keys(TYPES);
+
+/* ---------- 32 kart (her türden 4) ---------- */
+const CARDS = [
+  {tr:"Kötü giderse her şey biter.", en:"If this goes badly, everything is over.", type:"cat"},
+  {tr:"Sınavda bir soruyu yapamazsam bütün geleceğim mahvolur.", en:"If I miss one question on the exam, my whole future is ruined.", type:"cat"},
+  {tr:"Uçak biraz sallandı; kesin düşeceğiz.", en:"The plane shook a little; we are definitely going to crash.", type:"cat"},
+  {tr:"Patron benimle konuşmak istiyor; kesin kovulacağım ve bir daha iş bulamayacağım.", en:"My boss wants to talk to me; I will surely be fired and never find work again.", type:"cat"},
+
+  {tr:"Mesajıma hâlâ cevap yok; bana kızmış olmalı.", en:"Still no reply to my message; they must be angry with me.", type:"mind"},
+  {tr:"Toplantıda esnedi; beni sıkıcı buluyor.", en:"He yawned in the meeting; he finds me boring.", type:"mind"},
+  {tr:"Selam vermeden geçti; benden hoşlanmıyor.", en:"She walked past without saying hi; she does not like me.", type:"mind"},
+  {tr:"Sormama gerek yok, ne düşündüğünü biliyorum: beni yetersiz buluyor.", en:"No need to ask, I know what they think: they find me inadequate.", type:"mind"},
+
+  {tr:"Mükemmel değilse hiç sayılmaz.", en:"If it is not perfect, it does not count.", type:"allnone"},
+  {tr:"Diyetimi bir kez bozdum; artık tamamen bıraksam da olur.", en:"I broke my diet once; I might as well quit completely.", type:"allnone"},
+  {tr:"Ya birinci olurum ya da hiç yarışmam.", en:"Either I come first or I do not compete at all.", type:"allnone"},
+  {tr:"Bu ilişkide tek bir sorun bile varsa bitmeli demektir.", en:"If there is even one problem in this relationship, it must end.", type:"allnone"},
+
+  {tr:"Bir kez başarısız oldum; hep başarısızım.", en:"I failed once; I always fail.", type:"overgen"},
+  {tr:"Bu görüşme kötü geçti; hiçbir mülakatı geçemeyeceğim.", en:"This interview went badly; I will never pass any interview.", type:"overgen"},
+  {tr:"Beni reddetti; kimse benimle olmak istemez.", en:"They turned me down; nobody will ever want to be with me.", type:"overgen"},
+  {tr:"Yine geç kaldım; her şeyi hep berbat ederim.", en:"Late again; I always mess everything up.", type:"overgen"},
+
+  {tr:"Toplantı kötü geçti; benim suçum olmalı.", en:"The meeting went badly; it must be my fault.", type:"pers"},
+  {tr:"Arkadaşımın morali bozuk; kesin ben bir şey yaptım.", en:"My friend is in a bad mood; I must have done something.", type:"pers"},
+  {tr:"Takım kaybetti çünkü ben yeterince iyi oynamadım.", en:"The team lost because I did not play well enough.", type:"pers"},
+  {tr:"Annem üzgün görünüyor; herhalde onu ben üzdüm.", en:"Mom looks sad; I probably upset her.", type:"pers"},
+
+  {tr:"O güzel günden aklımda tek hata kaldı.", en:"From that lovely day, all I remember is the one mistake.", type:"filter"},
+  {tr:"Sunumda onca övgü aldım ama aklım tek eleştiride.", en:"I got so much praise for the talk, yet my mind is stuck on the one criticism.", type:"filter"},
+  {tr:"Tatil güzeldi ama o küçük tartışma her şeyi zehir etti.", en:"The vacation was nice, but that small argument poisoned all of it.", type:"filter"},
+  {tr:"Karnemde dokuz yüksek not var ama gözüm tek düşük notta.", en:"Nine high grades on my report card, but my eyes are on the one low grade.", type:"filter"},
+
+  {tr:"Asla hata yapmamalıyım.", en:"I must never make mistakes.", type:"should"},
+  {tr:"Her zaman güçlü olmalıyım; yorulmaya hakkım yok.", en:"I should always be strong; I have no right to be tired.", type:"should"},
+  {tr:"Herkes beni sevmeli.", en:"Everyone should like me.", type:"should"},
+  {tr:"Bu kadar üzülmemeliyim; hemen toparlanmalıyım.", en:"I should not be this upset; I ought to pull myself together right away.", type:"should"},
+
+  {tr:"Yemeği yaktım; tam bir başarısızım.", en:"I burned the dinner; I am a total failure.", type:"label"},
+  {tr:"Sınavı geçemedim; aptalım.", en:"I failed the exam; I am stupid.", type:"label"},
+  {tr:"Yine geç kaldı; tam bir sorumsuz.", en:"Late again; he is completely irresponsible.", type:"label"},
+  {tr:"Yanlış otobüse bindim; ne kadar salağım.", en:"I took the wrong bus; how dumb I am.", type:"label"}
+];
+
+/* ---------- UI metinleri ---------- */
+const T = {
+  tr:{
+    title:"Çarpıtma Avcısı", sub:"Bilişsel çarpıtmaları fark etme egzersizi",
+    tabGame:"🎯 Çarpıtma Avcısı", tabRec:"📝 Düşünce Kaydı",
+    g_h:"Çarpıtma Avcısı",
+    g_lead:"Ekrana bir otomatik düşünce gelecek. Görevin, bu düşüncedeki bilişsel çarpıtmayı yakalamak. Her turda sorular karışık gelir.",
+    g_lenlab:"Tur uzunluğu (soru sayısı):", g_start:"Başla",
+    g_ask:"Bu düşüncedeki çarpıtma hangisi?",
+    g_q:"Soru", g_scoreLbl:"Puan",
+    fb_ok:"Doğru! 🎉", fb_bad:"Doğru cevap:",
+    g_next:"Sıradaki", g_finish:"Sonucu gör",
+    ge_h:"Tur tamamlandı", ge_sub:(c,t)=>`${t} sorudan ${c} doğru`,
+    ge_blind:(name,def)=>`<b>Kör noktan: ${name}.</b> Bu turda en çok bu türde yanıldın. Hatırlatma: ${def}`,
+    ge_noblind:"Harika! Bu turda belirgin bir kör noktan yok — tüm türlerde isabetliydin. 🌿",
+    ge_again:"Yeni tur", ge_pdf:"PDF indir", ge_copy:"Kopyala", copied:"Kopyalandı ✓",
+    st_type:"Çarpıtma türü", st_res:"Doğru / Soru",
+    re_h:"Düşünce Kaydı — Özet",
+    r_steps:[
+      {k:"sit", h:"1 · Durum", q:"Ne oldu? Yalnızca olguları yaz (yer, zaman, kim, ne).", ph:"Örn: Salı akşamı, arkadaşıma attığım mesaja 5 saattir yanıt gelmedi.", type:"text", req:true},
+      {k:"emo", h:"2 · Duygu", q:"O anda hangi duyguyu hissettin? Tek bir duygu seç ve şiddetini puanla.", ph:"Örn: kaygı, üzüntü, öfke, utanç...", type:"emotion", req:true},
+      {k:"thought", h:"3 · Otomatik düşünce", q:"Aklından geçen düşünce tam olarak neydi?", ph:"Örn: Bana kızdı, artık benimle görüşmek istemiyor.", type:"text", req:true},
+      {k:"for", h:"4 · Lehte kanıt", q:"Bu düşünceyi destekleyen somut kanıtlar neler? (Yorum değil, olgu.)", ph:"Örn: Genelde daha hızlı yanıt verir.", type:"text", req:false},
+      {k:"against", h:"5 · Aksine kanıt", q:"Bu düşünceyle çelişen kanıtlar neler? Başka açıklamalar olabilir mi?", ph:"Örn: Bugün yoğun bir iş günü olduğunu söylemişti. Daha önce de geç yanıtlayıp özür dilediği olmuştu.", type:"text", req:false},
+      {k:"believe", h:"6 · Yeniden değerlendirme", q:"Kanıtlara baktıktan sonra, ilk düşüncen sence ne kadar doğru?", type:"slider", req:true},
+      {k:"balanced", h:"7 · Dengeli düşünce", q:"Kanıtların tümünü hesaba katan, daha dengeli ve gerçekçi bir düşünce yaz.", ph:"Örn: Yanıt gelmemesinin birçok nedeni olabilir; kızgın olduğuna dair elimde kanıt yok.", type:"text", req:true},
+      {k:"emo2", h:"8 · Duyguyu yeniden puanla", q:"Aynı duygunun şiddeti şimdi kaç?", type:"reslider", req:true}
+    ],
+    r_emoInt:"Şiddeti (0–100):",
+    r_remind:(e,v)=>`Başta <b>“${e}”</b> duygusunu <b>${v}/100</b> olarak puanlamıştın. Şimdi aynı duyguyu yeniden puanla.`,
+    r_back:"Geri", r_next:"İleri", r_done:"Bitir",
+    r_reqWarn:"Devam etmek için bu alanı doldur.",
+    re_delta:(e,a,b)=>{
+      const d=a-b;
+      if(d>0) return `“${e}”: ${a} → ${b} · ${d} puan hafifledi 🌿`;
+      if(d===0) return `“${e}”: ${a} → ${b} · Şiddet değişmedi. Bu da bir veri — seansta birlikte bakabiliriz.`;
+      return `“${e}”: ${a} → ${b} · Şiddet arttı. Bu da önemli bir veri — seansta birlikte bakabiliriz.`;
+    },
+    re_pdf:"PDF indir", re_copy:"Kopyala", re_new:"Yeni kayıt",
+    rl:{sit:"Durum", emo:"Duygu (başlangıç)", thought:"Otomatik düşünce", for:"Lehte kanıt", against:"Aksine kanıt", believe:"Düşünceye inanç (kanıt sonrası)", balanced:"Dengeli düşünce", emo2:"Duygu (sonra)"},
+    th_sum:"🗂 Terapist bölümü — kendi düşünce kartlarını ekle",
+    th_hint:"Buradan eklediğin kartlar oyuna karışır ve yalnızca bu cihazda saklanır. Kartların dosyayı açan herkeste görünmesi için: “JSON kopyala” de, çıktıyı dosyanın başındaki THERAPIST_CARDS bölümüne yapıştır.",
+    th_l1:"Düşünce (Türkçe):", th_l2:"Düşünce (İngilizce — boş bırakılırsa Türkçesi gösterilir):", th_l3:"Doğru çarpıtma türü:",
+    th_add:"Kart ekle", th_exp:"JSON kopyala", th_empty:"Henüz özel kart yok.",
+    th_needText:"Lütfen Türkçe düşünce metnini yaz.",
+    eth1:"Bilişsel-davranışçı yaklaşımdan uyarlanmış bir farkındalık egzersizidir; tanı ya da terapi değildir.",
+    eth2:"Yazdıkların yalnızca bu cihazda kalır; hiçbir yere gönderilmez.",
+    p_game_t:"Çarpıtma Avcısı — Tur Sonucu", p_rec_t:"Düşünce Kaydı",
+    p_date:"Tarih", p_score:"Sonuç", p_blind:"Kör nokta",
+    p_note:"Bilişsel-davranışçı yaklaşımdan uyarlanmış bir farkındalık egzersizidir; tanı ya da terapi değildir. Veriler yalnızca cihazda tutulur.",
+    printHint:"Açılan pencerede “PDF olarak kaydet”i seç."
+  },
+  en:{
+    title:"Distortion Hunter", sub:"An exercise in noticing cognitive distortions",
+    tabGame:"🎯 Distortion Hunter", tabRec:"📝 Thought Record",
+    g_h:"Distortion Hunter",
+    g_lead:"An automatic thought will appear on screen. Your task is to catch the cognitive distortion hiding in it. Questions are shuffled every round.",
+    g_lenlab:"Round length (number of questions):", g_start:"Start",
+    g_ask:"Which distortion is in this thought?",
+    g_q:"Question", g_scoreLbl:"Score",
+    fb_ok:"Correct! 🎉", fb_bad:"Correct answer:",
+    g_next:"Next", g_finish:"See results",
+    ge_h:"Round complete", ge_sub:(c,t)=>`${c} correct out of ${t} questions`,
+    ge_blind:(name,def)=>`<b>Your blind spot: ${name}.</b> This is the type you missed most this round. Reminder: ${def}`,
+    ge_noblind:"Great job! No clear blind spot this round — you were accurate across all types. 🌿",
+    ge_again:"New round", ge_pdf:"Download PDF", ge_copy:"Copy", copied:"Copied ✓",
+    st_type:"Distortion type", st_res:"Correct / Asked",
+    re_h:"Thought Record — Summary",
+    r_steps:[
+      {k:"sit", h:"1 · Situation", q:"What happened? Stick to the facts (where, when, who, what).", ph:"E.g.: Tuesday evening, no reply to my message for 5 hours.", type:"text", req:true},
+      {k:"emo", h:"2 · Emotion", q:"What emotion did you feel in that moment? Pick one emotion and rate its intensity.", ph:"E.g.: anxiety, sadness, anger, shame...", type:"emotion", req:true},
+      {k:"thought", h:"3 · Automatic thought", q:"What exactly went through your mind?", ph:"E.g.: They are angry with me; they do not want to see me anymore.", type:"text", req:true},
+      {k:"for", h:"4 · Evidence for", q:"What concrete evidence supports this thought? (Facts, not interpretations.)", ph:"E.g.: They usually reply faster.", type:"text", req:false},
+      {k:"against", h:"5 · Evidence against", q:"What evidence contradicts this thought? Could there be other explanations?", ph:"E.g.: They mentioned a busy work day. They have replied late before and apologized.", type:"text", req:false},
+      {k:"believe", h:"6 · Re-evaluate", q:"After weighing the evidence, how true does the original thought seem now?", type:"slider", req:true},
+      {k:"balanced", h:"7 · Balanced thought", q:"Write a more balanced, realistic thought that accounts for all the evidence.", ph:"E.g.: There are many possible reasons for no reply; I have no evidence they are angry.", type:"text", req:true},
+      {k:"emo2", h:"8 · Re-rate the emotion", q:"How intense is that same emotion now?", type:"reslider", req:true}
+    ],
+    r_emoInt:"Intensity (0–100):",
+    r_remind:(e,v)=>`At the start you rated <b>“${e}”</b> at <b>${v}/100</b>. Now re-rate that same emotion.`,
+    r_back:"Back", r_next:"Next", r_done:"Finish",
+    r_reqWarn:"Please fill in this field to continue.",
+    re_delta:(e,a,b)=>{
+      const d=a-b;
+      if(d>0) return `“${e}”: ${a} → ${b} · eased by ${d} points 🌿`;
+      if(d===0) return `“${e}”: ${a} → ${b} · No change. That is useful data too — worth exploring in session.`;
+      return `“${e}”: ${a} → ${b} · Intensity increased. That is important data — worth exploring in session.`;
+    },
+    re_pdf:"Download PDF", re_copy:"Copy", re_new:"New record",
+    rl:{sit:"Situation", emo:"Emotion (before)", thought:"Automatic thought", for:"Evidence for", against:"Evidence against", believe:"Belief in thought (after evidence)", balanced:"Balanced thought", emo2:"Emotion (after)"},
+    th_sum:"🗂 Therapist area — add your own thought cards",
+    th_hint:"Cards added here are mixed into the game and stored only on this device. To make cards visible to everyone who opens the file: click Copy JSON and paste the output into the THERAPIST_CARDS block at the top of the file.",
+    th_l1:"Thought (Turkish):", th_l2:"Thought (English — Turkish is shown if left empty):", th_l3:"Correct distortion type:",
+    th_add:"Add card", th_exp:"Copy JSON", th_empty:"No custom cards yet.",
+    th_needText:"Please write the Turkish thought text.",
+    eth1:"This is an awareness exercise adapted from the cognitive-behavioral approach; it is not diagnosis or therapy.",
+    eth2:"Everything you write stays on this device only; nothing is sent anywhere.",
+    p_game_t:"Distortion Hunter — Round Results", p_rec_t:"Thought Record",
+    p_date:"Date", p_score:"Result", p_blind:"Blind spot",
+    p_note:"An awareness exercise adapted from the cognitive-behavioral approach; not diagnosis or therapy. Data stays on the device only.",
+    printHint:"In the dialog that opens, choose “Save as PDF”."
+  }
+};
+
+/* ============ genel durum ============ */
+/* localStorage engelliyse (ör. bazı gizli modlar) sayfa yine de çalışsın */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+let lang = lsGet('ca_lang') || 'tr';
+let tab = 'game';
+let roundLen = 8;
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function shuffle(a){const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]];} return x;}
+
+function setLang(l){
+  lang=l; lsSet('ca_lang', l);
+  document.documentElement.lang = l;
+  applyStatic();
+  // aktif ekranları yeniden çiz
+  if(tab==='game'){
+    if(!$('gPlay').classList.contains('hidden')) renderQ(false);
+    if(!$('gEnd').classList.contains('hidden')) renderEnd();
+  } else {
+    if(!$('rEnd').classList.contains('hidden')) renderRecEnd(); else renderRecStep();
+  }
+  renderCustomList();
+}
+
+function applyStatic(){
+  const t=T[lang];
+  $('btnTR').classList.toggle('on', lang==='tr');
+  $('btnEN').classList.toggle('on', lang==='en');
+  $('t_title').textContent=t.title; $('t_sub').textContent=t.sub;
+  $('tabGame').textContent=t.tabGame; $('tabRec').textContent=t.tabRec;
+  $('g_h').textContent=t.g_h; $('g_lead').textContent=t.g_lead;
+  $('g_lenlab').textContent=t.g_lenlab; $('g_start').textContent=t.g_start;
+  $('g_ask').textContent=t.g_ask;
+  $('ge_h').textContent=t.ge_h; $('ge_again').textContent=t.ge_again;
+  $('ge_pdf').textContent=t.ge_pdf; $('ge_copy').textContent=t.ge_copy;
+  $('ge_copied').textContent=t.copied; $('re_copied').textContent=t.copied; $('th_copied').textContent=t.copied;
+  $('re_h').textContent=t.re_h; $('re_pdf').textContent=t.re_pdf; $('re_copy').textContent=t.re_copy; $('re_new').textContent=t.re_new;
+  $('r_back').textContent=t.r_back;
+  $('th_sum').textContent=t.th_sum; $('th_hint').textContent=t.th_hint;
+  $('th_l1').textContent=t.th_l1; $('th_l2').textContent=t.th_l2; $('th_l3').textContent=t.th_l3;
+  $('th_add').textContent=t.th_add; $('th_exp').textContent=t.th_exp;
+  $('eth1').textContent=t.eth1; $('eth2').textContent=t.eth2;
+  // tür seçicisi
+  const sel=$('th_type'); const cur=sel.value;
+  sel.innerHTML = TYPE_KEYS.map(k=>`<option value="${k}">${esc(TYPES[k][lang].name)}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+
+function showTab(x){
+  tab=x;
+  $('tabGame').classList.toggle('on', x==='game');
+  $('tabRec').classList.toggle('on', x==='rec');
+  $('secGame').classList.toggle('hidden', x!=='game');
+  $('secRec').classList.toggle('hidden', x!=='rec');
+  if(x==='rec' && $('rEnd').classList.contains('hidden')) renderRecStep();
+}
+
+/* =====================================================================
+   MOD 1 — ÇARPITMA AVCISI
+   ===================================================================== */
+let game=null;
+
+function pickLen(n){
+  roundLen=n;
+  document.querySelectorAll('.lenpick button').forEach(b=>b.classList.toggle('on', +b.dataset.len===n));
+}
+
+function getPool(){
+  return CARDS.concat(THERAPIST_CARDS, loadCustom());
+}
+
+function startGame(){
+  const pool=shuffle(getPool());
+  const n=Math.min(roundLen, pool.length);
+  const qs=pool.slice(0,n).map(card=>{
+    const others=shuffle(TYPE_KEYS.filter(k=>k!==card.type)).slice(0,3);
+    return {card, opts:shuffle([card.type].concat(others)), answered:false, pick:null};
+  });
+  game={qs, i:0, score:0, stats:{}};
+  TYPE_KEYS.forEach(k=>game.stats[k]={asked:0,correct:0});
+  $('gIntro').classList.add('hidden'); $('gEnd').classList.add('hidden');
+  $('gPlay').classList.remove('hidden');
+  renderQ(true);
+}
+
+function cardText(c){ return (lang==='en' && c.en) ? c.en : c.tr; }
+
+function renderQ(fresh){
+  const t=T[lang], q=game.qs[game.i];
+  $('g_qno').textContent=`${t.g_q} ${game.i+1}/${game.qs.length}`;
+  $('g_score').textContent=`${t.g_scoreLbl}: ${game.score}`;
+  $('g_bar').style.width=((game.i)/game.qs.length*100)+'%';
+  $('g_thought').textContent='“'+cardText(q.card)+'”';
+  $('g_ask').textContent=t.g_ask;
+  const box=$('g_opts'); box.innerHTML='';
+  q.opts.forEach(k=>{
+    const b=document.createElement('button');
+    b.textContent=TYPES[k][lang].name;
+    b.onclick=()=>answer(k,b);
+    if(q.answered){
+      b.disabled=true;
+      if(k===q.card.type) b.classList.add('correct');
+      else if(k===q.pick) b.classList.add('wrong');
+    }
+    box.appendChild(b);
+  });
+  const fb=$('g_fb');
+  if(q.answered){ showFeedback(q); $('g_next').classList.remove('hidden'); }
+  else { fb.className='feedback'; fb.innerHTML=''; $('g_next').classList.add('hidden'); }
+  $('g_next').textContent=(game.i===game.qs.length-1)?t.g_finish:t.g_next;
+}
+
+function answer(k, btn){
+  const q=game.qs[game.i];
+  if(q.answered) return;
+  q.answered=true; q.pick=k;
+  const ok=(k===q.card.type);
+  game.stats[q.card.type].asked++;
+  if(ok){ game.score++; game.stats[q.card.type].correct++; }
+  document.querySelectorAll('#g_opts button').forEach(b=>{
+    b.disabled=true;
+    const key=q.opts[[...b.parentNode.children].indexOf(b)];
+    if(key===q.card.type) b.classList.add('correct');
+    else if(key===k && !ok) b.classList.add('wrong');
+  });
+  showFeedback(q);
+  $('g_next').classList.remove('hidden');
+  $('g_score').textContent=`${T[lang].g_scoreLbl}: ${game.score}`;
+}
+
+function showFeedback(q){
+  const t=T[lang], fb=$('g_fb'), ok=(q.pick===q.card.type), ty=TYPES[q.card.type][lang];
+  fb.className='feedback '+(ok?'ok':'bad');
+  fb.innerHTML=(ok?`<b>${esc(t.fb_ok)}</b>`:`<b>${esc(t.fb_bad)} ${esc(ty.name)}</b>`)+esc(ty.def);
+}
+
+function nextQ(){
+  if(game.i<game.qs.length-1){ game.i++; renderQ(true); }
+  else { $('gPlay').classList.add('hidden'); $('gEnd').classList.remove('hidden'); renderEnd(); }
+}
+
+function blindSpot(){
+  let worst=null, worstMiss=0;
+  TYPE_KEYS.forEach(k=>{
+    const s=game.stats[k], miss=s.asked-s.correct;
+    if(s.asked>0 && miss>worstMiss){ worstMiss=miss; worst=k; }
+  });
+  return worst; // null → kör nokta yok
+}
+
+function renderEnd(){
+  const t=T[lang];
+  $('ge_h').textContent=t.ge_h;
+  $('ge_score').textContent=`${game.score} / ${game.qs.length}`;
+  $('ge_sub').textContent=t.ge_sub(game.score, game.qs.length);
+  const bs=blindSpot(), bd=$('ge_blind');
+  if(bs) bd.innerHTML=t.ge_blind(esc(TYPES[bs][lang].name), esc(TYPES[bs][lang].def));
+  else bd.innerHTML=esc(t.ge_noblind);
+  let rows=`<tr><th>${esc(t.st_type)}</th><th>${esc(t.st_res)}</th></tr>`;
+  TYPE_KEYS.forEach(k=>{
+    const s=game.stats[k];
+    if(s.asked>0) rows+=`<tr><td>${esc(TYPES[k][lang].name)}</td><td>${s.correct} / ${s.asked}</td></tr>`;
+  });
+  $('ge_table').innerHTML=rows;
+  $('ge_again').textContent=t.ge_again; $('ge_pdf').textContent=t.ge_pdf; $('ge_copy').textContent=t.ge_copy;
+}
+
+function gameReportText(){
+  const t=T[lang], bs=blindSpot();
+  let s=`${t.p_game_t}\n${t.p_date}: ${new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')}\n`;
+  s+=`${t.p_score}: ${game.score} / ${game.qs.length}\n`;
+  s+=`${t.p_blind}: `+(bs?TYPES[bs][lang].name:'—')+`\n\n`;
+  TYPE_KEYS.forEach(k=>{
+    const st=game.stats[k];
+    if(st.asked>0) s+=`- ${TYPES[k][lang].name}: ${st.correct}/${st.asked}\n`;
+  });
+  return s;
+}
+
+function copyGame(){ copyText(gameReportText(), 'ge_copied'); }
+
+function printGame(){
+  const t=T[lang], bs=blindSpot();
+  let rows='';
+  TYPE_KEYS.forEach(k=>{
+    const s=game.stats[k];
+    if(s.asked>0) rows+=`<tr><td>${esc(TYPES[k][lang].name)}</td><td>${s.correct} / ${s.asked}</td></tr>`;
+  });
+  $('printArea').innerHTML=`
+    <h1>${esc(t.p_game_t)}</h1>
+    <p class="pmeta">${esc(t.p_date)}: ${new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')}</p>
+    <h2>${esc(t.p_score)}</h2><p>${game.score} / ${game.qs.length}</p>
+    <h2>${esc(t.p_blind)}</h2><p>${bs?esc(TYPES[bs][lang].name)+' — '+esc(TYPES[bs][lang].def):'—'}</p>
+    <table><tr><th>${esc(t.st_type)}</th><th>${esc(t.st_res)}</th></tr>${rows}</table>
+    <p class="pnote">${esc(t.p_note)}</p>`;
+  window.print();
+}
+
+/* =====================================================================
+   MOD 2 — DÜŞÜNCE KAYDI (Kanıt Mahkemesi)
+   ===================================================================== */
+let rec={step:0, data:{sit:'',emo:'',emoV:50,thought:'',for:'',against:'',believe:50,balanced:'',emo2V:50}};
+
+function recRestart(){
+  rec={step:0, data:{sit:'',emo:'',emoV:50,thought:'',for:'',against:'',believe:50,balanced:'',emo2V:50}};
+  $('rEnd').classList.add('hidden'); $('rWiz').classList.remove('hidden');
+  renderRecStep();
+}
+
+function renderRecStep(){
+  const t=T[lang], steps=t.r_steps, s=steps[rec.step], d=rec.data;
+  $('r_dots').innerHTML=steps.map((_,i)=>`<i class="${i<=rec.step?'on':''}"></i>`).join('');
+  let html=`<h2>${esc(s.h)}</h2><p class="lead">${esc(s.q)}</p>`;
+  if(s.type==='text'){
+    html+=`<textarea id="r_in" placeholder="${esc(s.ph||'')}">${esc(d[s.k]||'')}</textarea>`;
+  } else if(s.type==='emotion'){
+    html+=`<input type="text" id="r_in" placeholder="${esc(s.ph||'')}" value="${esc(d.emo||'')}">`;
+    html+=`<label class="f" style="margin-top:14px;">${esc(t.r_emoInt)}</label>
+      <div class="slider-row"><input type="range" id="r_sl" min="0" max="100" value="${d.emoV}" oninput="$('r_sv').textContent=this.value">
+      <span class="sval" id="r_sv">${d.emoV}</span></div>`;
+  } else if(s.type==='slider'){
+    html+=`<div class="remind">“${esc(d.thought||'')}”</div>
+      <div class="slider-row"><input type="range" id="r_sl" min="0" max="100" value="${d.believe}" oninput="$('r_sv').textContent=this.value">
+      <span class="sval" id="r_sv">${d.believe}</span></div>
+      <p class="hint" style="margin-top:8px;">0 = ${lang==='tr'?'hiç doğru değil':'not true at all'} · 100 = ${lang==='tr'?'kesinlikle doğru':'completely true'}</p>`;
+  } else if(s.type==='reslider'){
+    html+=`<div class="remind">${t.r_remind(esc(d.emo||'—'), d.emoV)}</div>
+      <div class="slider-row"><input type="range" id="r_sl" min="0" max="100" value="${d.emo2V}" oninput="$('r_sv').textContent=this.value">
+      <span class="sval" id="r_sv">${d.emo2V}</span></div>`;
+  }
+  html+=`<p class="hint" id="r_warn" style="color:var(--bad); display:none; margin-top:8px;"></p>`;
+  $('r_body').innerHTML=html;
+  $('r_back').style.visibility=rec.step===0?'hidden':'visible';
+  $('r_back').textContent=t.r_back;
+  $('r_next').textContent=(rec.step===steps.length-1)?t.r_done:t.r_next;
+}
+
+function saveRecStep(){
+  const s=T[lang].r_steps[rec.step], d=rec.data;
+  const inp=$('r_in'), sl=$('r_sl');
+  if(s.type==='text'){ d[s.k]=inp.value.trim(); }
+  else if(s.type==='emotion'){ d.emo=inp.value.trim(); d.emoV=+sl.value; }
+  else if(s.type==='slider'){ d.believe=+sl.value; }
+  else if(s.type==='reslider'){ d.emo2V=+sl.value; }
+}
+
+function recValid(){
+  const s=T[lang].r_steps[rec.step], d=rec.data;
+  if(!s.req) return true;
+  if(s.type==='text') return !!d[s.k];
+  if(s.type==='emotion') return !!d.emo;
+  return true;
+}
+
+function recNext(){
+  saveRecStep();
+  if(!recValid()){
+    const w=$('r_warn'); w.textContent=T[lang].r_reqWarn; w.style.display='block';
+    return;
+  }
+  if(rec.step<T[lang].r_steps.length-1){ rec.step++; renderRecStep(); }
+  else { $('rWiz').classList.add('hidden'); $('rEnd').classList.remove('hidden'); renderRecEnd(); }
+}
+
+function recBack(){
+  saveRecStep();
+  if(rec.step>0){ rec.step--; renderRecStep(); }
+}
+
+function renderRecEnd(){
+  const t=T[lang], d=rec.data;
+  $('re_h').textContent=t.re_h;
+  const delta=$('re_delta');
+  delta.textContent=t.re_delta(d.emo||'—', d.emoV, d.emo2V);
+  delta.className='sumline'+((d.emoV-d.emo2V)>0?'':' warn');
+  const rl=t.rl;
+  const items=[
+    [rl.sit, d.sit], [rl.emo, `${d.emo} — ${d.emoV}/100`], [rl.thought, d.thought],
+    [rl.for, d.for||'—'], [rl.against, d.against||'—'], [rl.believe, `${d.believe}/100`],
+    [rl.balanced, d.balanced], [rl.emo2, `${d.emo} — ${d.emo2V}/100`]
+  ];
+  $('re_list').innerHTML=items.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+  $('re_pdf').textContent=t.re_pdf; $('re_copy').textContent=t.re_copy; $('re_new').textContent=t.re_new;
+}
+
+function recReportText(){
+  const t=T[lang], d=rec.data, rl=t.rl;
+  let s=`${t.p_rec_t}\n${t.p_date}: ${new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')}\n\n`;
+  s+=`${rl.sit}: ${d.sit}\n`;
+  s+=`${rl.emo}: ${d.emo} — ${d.emoV}/100\n`;
+  s+=`${rl.thought}: ${d.thought}\n`;
+  s+=`${rl.for}: ${d.for||'—'}\n`;
+  s+=`${rl.against}: ${d.against||'—'}\n`;
+  s+=`${rl.believe}: ${d.believe}/100\n`;
+  s+=`${rl.balanced}: ${d.balanced}\n`;
+  s+=`${rl.emo2}: ${d.emo} — ${d.emo2V}/100\n\n`;
+  s+=t.re_delta(d.emo||'—', d.emoV, d.emo2V);
+  return s;
+}
+
+function copyRec(){ copyText(recReportText(), 're_copied'); }
+
+function printRec(){
+  const t=T[lang], d=rec.data, rl=t.rl;
+  const row=(k,v)=>`<h2>${esc(k)}</h2><p>${esc(v)}</p>`;
+  $('printArea').innerHTML=`
+    <h1>${esc(t.p_rec_t)}</h1>
+    <p class="pmeta">${esc(t.p_date)}: ${new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')}</p>
+    ${row(rl.sit, d.sit)}
+    ${row(rl.emo, `${d.emo} — ${d.emoV}/100`)}
+    ${row(rl.thought, d.thought)}
+    ${row(rl.for, d.for||'—')}
+    ${row(rl.against, d.against||'—')}
+    ${row(rl.believe, `${d.believe}/100`)}
+    ${row(rl.balanced, d.balanced)}
+    ${row(rl.emo2, `${d.emo} — ${d.emo2V}/100`)}
+    <p style="margin-top:10pt;font-weight:bold;">${esc(t.re_delta(d.emo||'—', d.emoV, d.emo2V))}</p>
+    <p class="pnote">${esc(t.p_note)}</p>`;
+  window.print();
+}
+
+/* =====================================================================
+   TERAPİST KARTLARI (cihazda saklanan)
+   ===================================================================== */
+function loadCustom(){
+  try{ return JSON.parse(lsGet('ca_custom_v1')||'[]'); }catch(e){ return []; }
+}
+function saveCustom(arr){ lsSet('ca_custom_v1', JSON.stringify(arr)); }
+
+function addCustom(){
+  const trTxt=$('th_tr').value.trim(), enTxt=$('th_en').value.trim(), ty=$('th_type').value;
+  if(!trTxt){ alert(T[lang].th_needText); return; }
+  const arr=loadCustom();
+  arr.push({tr:trTxt, en:enTxt||trTxt, type:ty});
+  saveCustom(arr);
+  $('th_tr').value=''; $('th_en').value='';
+  renderCustomList();
+}
+
+function delCustom(i){
+  const arr=loadCustom(); arr.splice(i,1); saveCustom(arr); renderCustomList();
+}
+
+function renderCustomList(){
+  const arr=loadCustom(), box=$('th_list');
+  if(arr.length===0){ box.innerHTML=`<p class="hint">${esc(T[lang].th_empty)}</p>`; return; }
+  box.innerHTML=arr.map((c,i)=>`
+    <div class="ci"><div>“${esc(c.tr)}”<small>${esc(TYPES[c.type][lang].name)}</small></div>
+    <button class="del" onclick="delCustom(${i})" title="Sil / Delete">✕</button></div>`).join('');
+}
+
+function exportCustom(){
+  const arr=loadCustom();
+  const s=arr.map(c=>`  {tr:${JSON.stringify(c.tr)}, en:${JSON.stringify(c.en)}, type:${JSON.stringify(c.type)}},`).join('\n');
+  copyText(s||'// (kart yok / no cards)', 'th_copied');
+}
+
+/* ---------- kopyalama yardımcı ---------- */
+function copyText(s, okId){
+  const done=()=>{ const el=$(okId); el.style.display='inline'; setTimeout(()=>el.style.display='none', 2200); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(s).then(done).catch(()=>fallbackCopy(s, done));
+  } else fallbackCopy(s, done);
+}
+function fallbackCopy(s, done){
+  const ta=document.createElement('textarea');
+  ta.value=s; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ---------- başlat ---------- */
+setLang(lang);
+showTab('game');
+renderCustomList();
+</script>
+</body>
+</html>

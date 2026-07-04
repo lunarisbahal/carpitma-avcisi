@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Duygu Çarkı · Emotion Wheel</title>
+<style>
+  :root{
+    --bg:#f2f6f5; --card:#fff; --ink:#2b3a38; --muted:#6b7f7c;
+    --accent:#2f7d6d; --accent-soft:#e3efec; --accent-dark:#22594e;
+    --border:#dbe6e3; --shadow:0 2px 10px rgba(43,58,56,.07); --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;padding:16px 16px 48px;}
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 0 6px;}
+  .title h1{font-size:1.45rem;font-weight:700;color:var(--accent-dark);}
+  .title p{font-size:.9rem;color:var(--muted);margin-top:2px;}
+  .langbox{display:flex;border:1px solid var(--border);border-radius:999px;overflow:hidden;background:var(--card);flex-shrink:0;}
+  .langbox button{border:0;background:transparent;padding:7px 14px;font-size:.85rem;cursor:pointer;color:var(--muted);font-weight:600;}
+  .langbox button.on{background:var(--accent);color:#fff;}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-top:16px;}
+  .panel h2{font-size:1.12rem;color:var(--accent-dark);margin-bottom:6px;}
+  .panel p.lead{color:var(--muted);font-size:.93rem;margin-bottom:14px;}
+  .dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px;}
+  .dots i{width:9px;height:9px;border-radius:50%;background:var(--border);}
+  .dots i.on{background:var(--accent);}
+  .btn{display:inline-block;border:0;border-radius:10px;padding:12px 20px;font-size:.95rem;font-weight:600;background:var(--accent);color:#fff;cursor:pointer;transition:background .15s;}
+  .btn:hover{background:var(--accent-dark);}
+  .btn.ghost{background:var(--accent-soft);color:var(--accent-dark);}
+  .btn:disabled{opacity:.4;cursor:default;}
+  .rowbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;justify-content:space-between;}
+  .core-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .core-grid button{border:2px solid transparent;border-radius:12px;padding:16px 10px;font-size:1rem;font-weight:700;color:#fff;cursor:pointer;transition:transform .1s;text-align:center;}
+  .core-grid button:hover{transform:translateY(-2px);}
+  .core-grid button.sel{outline:3px solid var(--accent-dark);outline-offset:2px;}
+  .subs{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .subs button{border:1.5px solid var(--border);background:#fff;border-radius:999px;padding:8px 14px;font-size:.9rem;color:var(--ink);cursor:pointer;}
+  .subs button.sel{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);font-weight:600;}
+  .subhdr{font-size:.85rem;color:var(--muted);margin-top:18px;font-weight:600;}
+  .slider-row{display:flex;align-items:center;gap:14px;margin-top:10px;}
+  input[type=range]{flex:1;accent-color:var(--accent);height:34px;}
+  .sval{font-size:1.4rem;font-weight:800;color:var(--accent-dark);min-width:56px;text-align:center;}
+  .hint{font-size:.83rem;color:var(--muted);margin-top:8px;}
+  textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;font-size:.95rem;font-family:inherit;color:var(--ink);background:#fff;resize:vertical;min-height:70px;margin-top:6px;}
+  textarea:focus{outline:none;border-color:var(--accent);}
+  label.f{display:block;font-weight:600;font-size:.92rem;color:var(--accent-dark);margin-top:14px;}
+  .bodywrap{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;margin-top:8px;}
+  .bodysvg{flex:0 0 200px;margin:0 auto;}
+  .bodysvg svg{width:200px;height:auto;display:block;}
+  .zone{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5;opacity:.45;cursor:pointer;transition:opacity .12s,fill .12s;}
+  .zone:hover{opacity:.75;}
+  .zone.on{fill:var(--accent);opacity:.9;}
+  .zonelist{flex:1;min-width:160px;font-size:.9rem;}
+  .zonelist .z{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-dark);border-radius:999px;padding:6px 12px;margin:0 6px 8px 0;font-size:.85rem;font-weight:600;}
+  .silh{fill:#cdddd8;}
+  .summary-em{display:inline-block;border-radius:10px;padding:6px 16px;color:#fff;font-weight:700;font-size:1.05rem;}
+  dl.rec{font-size:.92rem;margin-top:6px;}
+  dl.rec dt{font-weight:700;color:var(--accent-dark);margin-top:12px;font-size:.8rem;text-transform:uppercase;letter-spacing:.3px;}
+  dl.rec dd{margin-top:3px;white-space:pre-wrap;}
+  .copyok{color:var(--accent-dark);font-size:.85rem;align-self:center;display:none;}
+  footer.eth{margin-top:26px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.6;padding:0 8px;}
+  .hidden{display:none !important;}
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea,#printArea *{visibility:visible;}
+    #printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:24px;color:#000;}
+    #printArea h1{font-size:16pt;margin-bottom:4pt;} #printArea h2{font-size:12pt;margin:10pt 0 3pt;}
+    #printArea .pmeta{color:#555;font-size:9pt;margin-bottom:10pt;}
+    #printArea .pnote{margin-top:14pt;font-size:8.5pt;color:#666;border-top:1px solid #ccc;padding-top:6pt;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title"><h1 id="t_title"></h1><p id="t_sub"></p></div>
+    <div class="langbox"><button id="btnTR" onclick="setLang('tr')">TR</button><button id="btnEN" onclick="setLang('en')">EN</button></div>
+  </header>
+
+  <div class="panel" id="wiz">
+    <div class="dots" id="dots"></div>
+    <div id="body"></div>
+    <div class="rowbtns">
+      <button class="btn ghost" id="backBtn" onclick="back()"></button>
+      <button class="btn" id="nextBtn" onclick="next()"></button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="end">
+    <h2 id="e_h"></h2>
+    <dl class="rec" id="e_list"></dl>
+    <div class="rowbtns">
+      <button class="btn ghost" id="e_pdf" onclick="printOut()"></button>
+      <button class="btn ghost" id="e_copy" onclick="copyOut()"></button>
+      <button class="btn" id="e_new" onclick="restart()"></button>
+      <span class="copyok" id="e_copied"></span>
+    </div>
+  </div>
+
+  <footer class="eth"><p id="eth1"></p><p id="eth2" style="margin-top:6px;"></p></footer>
+</div>
+<div id="printArea"></div>
+
+<script>
+'use strict';
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---- duygular ---- */
+var CORE=[
+  {k:'joy',c:'#f2c94c',tr:'Mutluluk',en:'Joy',subs:{tr:['Neşe','Huzur','Heyecan','Gurur','Minnet','Umut'],en:['Cheerful','Peaceful','Excited','Proud','Grateful','Hopeful']}},
+  {k:'sad',c:'#5b8def',tr:'Üzüntü',en:'Sadness',subs:{tr:['Kederli','Yalnız','Hayal kırıklığı','Çaresiz','Boşluk','Özlem'],en:['Grief','Lonely','Disappointed','Helpless','Empty','Longing']}},
+  {k:'anger',c:'#eb5757',tr:'Öfke',en:'Anger',subs:{tr:['Kızgın','Sinirli','Hüsran','Kırgın','Haset','İsyan'],en:['Angry','Irritated','Frustrated','Resentful','Jealous','Rebellious']}},
+  {k:'fear',c:'#9b59b6',tr:'Korku',en:'Fear',subs:{tr:['Kaygı','Panik','Endişe','Tedirgin','Güvensiz','Dehşet'],en:['Anxious','Panic','Worried','Uneasy','Insecure','Terrified']}},
+  {k:'disgust',c:'#27ae60',tr:'Tiksinti',en:'Disgust',subs:{tr:['İğrenme','Rahatsızlık','Hoşnutsuz','Küçümseme'],en:['Repulsed','Uncomfortable','Displeased','Contempt']}},
+  {k:'surprise',c:'#f2994a',tr:'Şaşkınlık',en:'Surprise',subs:{tr:['Şaşırmış','Afallamış','Meraklı','Hayret'],en:['Surprised','Stunned','Curious','Amazed']}},
+  {k:'love',c:'#eb6fbd',tr:'Sevgi',en:'Love',subs:{tr:['Şefkat','Yakınlık','Bağlılık','Hayranlık','Güven'],en:['Compassion','Closeness','Devotion','Admiration','Trust']}},
+  {k:'shame',c:'#7f8c8d',tr:'Utanç',en:'Shame',subs:{tr:['Mahcup','Suçluluk','Yetersiz','Pişman','Küçük düşmüş'],en:['Embarrassed','Guilty','Inadequate','Regretful','Humiliated']}}
+];
+var ZONES=[
+  {k:'head',tr:'Baş',en:'Head'},{k:'throat',tr:'Boğaz',en:'Throat'},{k:'chest',tr:'Göğüs',en:'Chest'},
+  {k:'stomach',tr:'Karın',en:'Stomach'},{k:'shoulders',tr:'Omuzlar',en:'Shoulders'},{k:'arms',tr:'Kollar / Eller',en:'Arms / Hands'},
+  {k:'legs',tr:'Bacaklar',en:'Legs'},{k:'whole',tr:'Tüm beden',en:'Whole body'}
+];
+
+var T={
+  tr:{title:'Duygu Çarkı',sub:'Duygunu adlandır, yoğunluğunu ve bedende yerini fark et',
+    steps:['Duygu','Yoğunluk','Beden','Not'],
+    s1h:'Şu an ağırlıklı olarak ne hissediyorsun?',s1p:'Önce bir ana duygu seç; sonra istersen daha ince bir tonunu işaretle.',
+    subhdr:'Daha ince tonu (isteğe bağlı):',
+    s2h:'Bu duygu ne kadar güçlü?',s2p:'0 = neredeyse yok · 100 = çok güçlü',
+    s3h:'Bedeninde nerede hissediyorsun?',s3p:'Hissettiğin yerlere dokun (birden fazla olabilir).',
+    s4h:'Bu duyguyla ilgili bir not',s4p:'İstersen bunu tetikleyen durumu ve şu an neye ihtiyacın olduğunu yazabilirsin. Yazdıkların yalnız cihazında kalır.',
+    s4l1:'Bunu ne tetikledi? (durum)',s4l2:'Şu an neye ihtiyacım var?',
+    back:'Geri',next:'İleri',done:'Bitir',
+    warnEmo:'Devam etmek için bir duygu seç.',
+    e_h:'Duygu Kaydı — Özet',
+    rl:{emo:'Duygu',inten:'Yoğunluk',body:'Beden',trig:'Tetikleyen durum',need:'İhtiyaç'},
+    e_pdf:'PDF indir',e_copy:'Kopyala',e_new:'Yeni kayıt',copied:'Kopyalandı ✓',
+    eth1:'Duygu farkındalığına yönelik bir egzersizdir; tanı ya da terapi değildir.',
+    eth2:'Yazdıkların yalnızca bu cihazda kalır; hiçbir yere gönderilmez.',
+    p_t:'Duygu Kaydı',p_date:'Tarih',p_note:'Duygu farkındalığına yönelik bir egzersizdir; tanı ya da terapi değildir. Veriler yalnız cihazda tutulur.'},
+  en:{title:'Emotion Wheel',sub:'Name the emotion, notice its intensity and where it lives in the body',
+    steps:['Emotion','Intensity','Body','Note'],
+    s1h:'What are you mostly feeling right now?',s1p:'Pick a core emotion first; then optionally mark a finer shade.',
+    subhdr:'A finer shade (optional):',
+    s2h:'How strong is this emotion?',s2p:'0 = almost none · 100 = very strong',
+    s3h:'Where do you feel it in your body?',s3p:'Tap the places you feel it (can be more than one).',
+    s4h:'A note about this emotion',s4p:'Optionally write what triggered it and what you need right now. Everything stays on your device.',
+    s4l1:'What triggered this? (situation)',s4l2:'What do I need right now?',
+    back:'Back',next:'Next',done:'Finish',
+    warnEmo:'Please pick an emotion to continue.',
+    e_h:'Emotion Record — Summary',
+    rl:{emo:'Emotion',inten:'Intensity',body:'Body',trig:'Trigger',need:'Need'},
+    e_pdf:'Download PDF',e_copy:'Copy',e_new:'New record',copied:'Copied ✓',
+    eth1:'An exercise for emotional awareness; not diagnosis or therapy.',
+    eth2:'Everything you write stays on this device only; nothing is sent anywhere.',
+    p_t:'Emotion Record',p_date:'Date',p_note:'An exercise for emotional awareness; not diagnosis or therapy. Data stays on the device only.'}
+};
+
+var lang=lsGet('dc_lang')||'tr';
+var step=0;
+var data={core:null,sub:null,inten:50,zones:[],trig:'',need:''};
+
+function setLang(l){lang=l;lsSet('dc_lang',l);document.documentElement.lang=l;applyStatic();if(!$('end').classList.contains('hidden'))renderEnd();else render();}
+function applyStatic(){
+  var t=T[lang];
+  $('btnTR').classList.toggle('on',lang==='tr');$('btnEN').classList.toggle('on',lang==='en');
+  $('t_title').textContent=t.title;$('t_sub').textContent=t.sub;
+  $('backBtn').textContent=t.back;$('eth1').textContent=t.eth1;$('eth2').textContent=t.eth2;
+  $('e_h').textContent=t.e_h;$('e_pdf').textContent=t.e_pdf;$('e_copy').textContent=t.e_copy;$('e_new').textContent=t.e_new;$('e_copied').textContent=t.copied;
+}
+function coreObj(k){for(var i=0;i<CORE.length;i++)if(CORE[i].k===k)return CORE[i];return null;}
+function emoLabel(){var c=coreObj(data.core);if(!c)return'—';return (data.sub!=null)?(c.subs[lang][data.sub]+' ('+c[lang]+')'):c[lang];}
+
+function render(){
+  var t=T[lang];
+  $('dots').innerHTML=t.steps.map(function(_,i){return '<i class="'+(i<=step?'on':'')+'"></i>';}).join('');
+  var h='';
+  if(step===0){
+    h+='<h2>'+esc(t.s1h)+'</h2><p class="lead">'+esc(t.s1p)+'</p><div class="core-grid">';
+    CORE.forEach(function(c){h+='<button style="background:'+c.c+'" class="'+(data.core===c.k?'sel':'')+'" onclick="pickCore(\''+c.k+'\')">'+esc(c[lang])+'</button>';});
+    h+='</div>';
+    if(data.core){
+      var c=coreObj(data.core);
+      h+='<div class="subhdr">'+esc(t.subhdr)+'</div><div class="subs">';
+      c.subs[lang].forEach(function(s,si){h+='<button class="'+(data.sub===si?'sel':'')+'" onclick="pickSub('+si+')">'+esc(s)+'</button>';});
+      h+='</div>';
+    }
+    h+='<p class="hint" id="warn" style="color:#b04a3a;display:none;"></p>';
+  } else if(step===1){
+    h+='<h2>'+esc(t.s2h)+'</h2><p class="lead">'+esc(t.s2p)+'</p>';
+    h+='<div class="slider-row"><input type="range" min="0" max="100" value="'+data.inten+'" oninput="$(\'iv\').textContent=this.value;data.inten=+this.value"><span class="sval" id="iv">'+data.inten+'</span></div>';
+  } else if(step===2){
+    h+='<h2>'+esc(t.s3h)+'</h2><p class="lead">'+esc(t.s3p)+'</p>'+bodySVG()+zoneList();
+  } else if(step===3){
+    h+='<h2>'+esc(t.s4h)+'</h2><p class="lead">'+esc(t.s4p)+'</p>';
+    h+='<label class="f">'+esc(t.s4l1)+'</label><textarea id="trig" oninput="data.trig=this.value">'+esc(data.trig)+'</textarea>';
+    h+='<label class="f">'+esc(t.s4l2)+'</label><textarea id="need" oninput="data.need=this.value">'+esc(data.need)+'</textarea>';
+  }
+  $('body').innerHTML=h;
+  $('backBtn').style.visibility=step===0?'hidden':'visible';
+  $('nextBtn').textContent=(step===t.steps.length-1)?t.done:t.next;
+}
+function pickCore(k){if(data.core!==k)data.sub=null;data.core=k;render();}
+function pickSub(si){data.sub=(data.sub===si?null:si);render();}
+function toggleZone(k){var i=data.zones.indexOf(k);if(i>-1)data.zones.splice(i,1);else data.zones.push(k);render();}
+
+function bodySVG(){
+  // basit ön cephe silueti + tıklanabilir bölgeler
+  var z=function(k,el){return el.replace('__cls__','zone'+(data.zones.indexOf(k)>-1?' on':''));};
+  return '<div class="bodywrap"><div class="bodysvg"><svg viewBox="0 0 120 260" xmlns="http://www.w3.org/2000/svg">'
+    +'<ellipse class="silh" cx="60" cy="28" rx="20" ry="24"/>'
+    +'<rect class="silh" x="52" y="50" width="16" height="14" rx="5"/>'
+    +'<rect class="silh" x="34" y="62" width="52" height="70" rx="16"/>'
+    +'<rect class="silh" x="16" y="66" width="18" height="66" rx="9"/>'
+    +'<rect class="silh" x="86" y="66" width="18" height="66" rx="9"/>'
+    +'<rect class="silh" x="38" y="128" width="20" height="90" rx="9"/>'
+    +'<rect class="silh" x="62" y="128" width="20" height="90" rx="9"/>'
+    // zones
+    +z('head','<ellipse class="__cls__" cx="60" cy="28" rx="20" ry="24" onclick="toggleZone(\'head\')"/>')
+    +z('throat','<rect class="__cls__" x="52" y="49" width="16" height="15" rx="5" onclick="toggleZone(\'throat\')"/>')
+    +z('shoulders','<rect class="__cls__" x="30" y="60" width="60" height="12" rx="6" onclick="toggleZone(\'shoulders\')"/>')
+    +z('chest','<rect class="__cls__" x="36" y="72" width="48" height="28" rx="8" onclick="toggleZone(\'chest\')"/>')
+    +z('stomach','<rect class="__cls__" x="36" y="100" width="48" height="30" rx="8" onclick="toggleZone(\'stomach\')"/>')
+    +z('arms','<rect class="__cls__" x="16" y="72" width="18" height="60" rx="9" onclick="toggleZone(\'arms\')"/>')
+    +z('arms','<rect class="__cls__" x="86" y="72" width="18" height="60" rx="9" onclick="toggleZone(\'arms\')"/>')
+    +z('legs','<rect class="__cls__" x="38" y="132" width="20" height="86" rx="9" onclick="toggleZone(\'legs\')"/>')
+    +z('legs','<rect class="__cls__" x="62" y="132" width="20" height="86" rx="9" onclick="toggleZone(\'legs\')"/>')
+    +'</svg></div><div class="zonelist" id="zl">'+zoneChips()+'</div></div>';
+}
+function zoneChips(){
+  if(data.zones.length===0)return '';
+  return data.zones.map(function(k){var z=ZONES.filter(function(x){return x.k===k;})[0];return '<span class="z">'+esc(z?z[lang]:k)+'</span>';}).join('');
+}
+function zoneList(){
+  // quick toggle buttons under svg for accessibility
+  var h='<div class="subs" style="margin-top:14px;">';
+  ZONES.forEach(function(z){h+='<button class="'+(data.zones.indexOf(z.k)>-1?'sel':'')+'" onclick="toggleZone(\''+z.k+'\')">'+esc(z[lang])+'</button>';});
+  h+='</div>';return h;
+}
+
+function next(){
+  var t=T[lang];
+  if(step===0 && !data.core){var w=$('warn');if(w){w.textContent=t.warnEmo;w.style.display='block';}return;}
+  if(step<t.steps.length-1){step++;render();}
+  else{$('wiz').classList.add('hidden');$('end').classList.remove('hidden');renderEnd();}
+}
+function back(){if(step>0){step--;render();}}
+function restart(){data={core:null,sub:null,inten:50,zones:[],trig:'',need:''};step=0;$('end').classList.add('hidden');$('wiz').classList.remove('hidden');render();}
+
+function zonesText(){return data.zones.map(function(k){var z=ZONES.filter(function(x){return x.k===k;})[0];return z?z[lang]:k;}).join(', ')||'—';}
+function renderEnd(){
+  var t=T[lang],rl=t.rl,c=coreObj(data.core);
+  var items=[
+    [rl.emo,'<span class="summary-em" style="background:'+(c?c.c:'#999')+'">'+esc(emoLabel())+'</span>'],
+    [rl.inten,data.inten+'/100'],
+    [rl.body,esc(zonesText())],
+    [rl.trig,esc(data.trig||'—')],
+    [rl.need,esc(data.need||'—')]
+  ];
+  $('e_list').innerHTML=items.map(function(p){return '<dt>'+esc(p[0])+'</dt><dd>'+p[1]+'</dd>';}).join('');
+}
+function outText(){
+  var t=T[lang],rl=t.rl;
+  var s=t.p_t+'\n'+t.p_date+': '+new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')+'\n\n';
+  s+=rl.emo+': '+emoLabel()+'\n'+rl.inten+': '+data.inten+'/100\n'+rl.body+': '+zonesText()+'\n'+rl.trig+': '+(data.trig||'—')+'\n'+rl.need+': '+(data.need||'—')+'\n';
+  return s;
+}
+function copyOut(){copyText(outText(),'e_copied');}
+function printOut(){
+  var t=T[lang],rl=t.rl,c=coreObj(data.core);
+  $('printArea').innerHTML='<h1>'+esc(t.p_t)+'</h1><p class="pmeta">'+esc(t.p_date)+': '+new Date().toLocaleDateString(lang==='tr'?'tr-TR':'en-US')+'</p>'
+    +'<h2>'+esc(rl.emo)+'</h2><p>'+esc(emoLabel())+'</p>'
+    +'<h2>'+esc(rl.inten)+'</h2><p>'+data.inten+'/100</p>'
+    +'<h2>'+esc(rl.body)+'</h2><p>'+esc(zonesText())+'</p>'
+    +'<h2>'+esc(rl.trig)+'</h2><p>'+esc(data.trig||'—')+'</p>'
+    +'<h2>'+esc(rl.need)+'</h2><p>'+esc(data.need||'—')+'</p>'
+    +'<p class="pnote">'+esc(t.p_note)+'</p>';
+  window.print();
+}
+function copyText(s,okId){
+  var done=function(){var el=$(okId);el.style.display='inline';setTimeout(function(){el.style.display='none';},2200);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(done).catch(function(){fb(s,done);});
+  else fb(s,done);
+}
+function fb(s,done){var ta=document.createElement('textarea');ta.value=s;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}
+
+setLang(lang);
+</script>
+</body>
+</html>

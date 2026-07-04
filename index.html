@@ -217,8 +217,11 @@
     </div>
   </section>
 
-  <!-- ================= THERAPIST AREA ================= -->
-  <details class="thera" id="theraBox">
+  <!-- ================= THERAPIST AREA (şifreli — ziyaretçilerden gizli) ================= -->
+  <div id="theraGate" style="text-align:center;margin-top:24px;">
+    <button type="button" class="btn ghost small" id="th_gateBtn" onclick="theraLogin()"></button>
+  </div>
+  <details class="thera hidden" id="theraBox">
     <summary id="th_sum"></summary>
     <div class="inner">
       <p class="hint" id="th_hint"></p>
@@ -369,6 +372,7 @@ const T = {
     th_l1:"Düşünce (Türkçe):", th_l2:"Düşünce (İngilizce — boş bırakılırsa Türkçesi gösterilir):", th_l3:"Doğru çarpıtma türü:",
     th_add:"Kart ekle", th_exp:"JSON kopyala", th_empty:"Henüz özel kart yok.",
     th_needText:"Lütfen Türkçe düşünce metnini yaz.",
+    th_gate:"🔒 Terapist Girişi", th_pw:"Terapist şifresi:", th_wrong:"Şifre hatalı.", th_lock:"Kilitle / Çıkış",
     eth1:"Bilişsel-davranışçı yaklaşımdan uyarlanmış bir farkındalık egzersizidir; tanı ya da terapi değildir.",
     eth2:"Yazdıkların yalnızca bu cihazda kalır; hiçbir yere gönderilmez.",
     p_game_t:"Çarpıtma Avcısı — Tur Sonucu", p_rec_t:"Düşünce Kaydı",
@@ -419,6 +423,7 @@ const T = {
     th_l1:"Thought (Turkish):", th_l2:"Thought (English — Turkish is shown if left empty):", th_l3:"Correct distortion type:",
     th_add:"Add card", th_exp:"Copy JSON", th_empty:"No custom cards yet.",
     th_needText:"Please write the Turkish thought text.",
+    th_gate:"🔒 Therapist Login", th_pw:"Therapist password:", th_wrong:"Wrong password.", th_lock:"Lock / Sign out",
     eth1:"This is an awareness exercise adapted from the cognitive-behavioral approach; it is not diagnosis or therapy.",
     eth2:"Everything you write stays on this device only; nothing is sent anywhere.",
     p_game_t:"Distortion Hunter — Round Results", p_rec_t:"Thought Record",
@@ -472,6 +477,7 @@ function applyStatic(){
   $('th_sum').textContent=t.th_sum; $('th_hint').textContent=t.th_hint;
   $('th_l1').textContent=t.th_l1; $('th_l2').textContent=t.th_l2; $('th_l3').textContent=t.th_l3;
   $('th_add').textContent=t.th_add; $('th_exp').textContent=t.th_exp;
+  $('th_gateBtn').textContent = (lsGet('ca_thera')==='1') ? t.th_lock : t.th_gate;
   $('eth1').textContent=t.eth1; $('eth2').textContent=t.eth2;
   // tür seçicisi
   const sel=$('th_type'); const cur=sel.value;
@@ -803,10 +809,27 @@ function fallbackCopy(s, done){
   document.body.removeChild(ta);
 }
 
+/* ---------- terapist girişi (şifreli) ---------- */
+function caHash(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return h; }
+var THERA_HASH=408465243;
+function theraSetUnlocked(on){
+  if(on){ lsSet('ca_thera','1'); $('theraBox').classList.remove('hidden'); $('theraBox').open=true; }
+  else { lsSet('ca_thera','0'); $('theraBox').classList.add('hidden'); $('theraBox').open=false; }
+  $('th_gateBtn').textContent = on ? T[lang].th_lock : T[lang].th_gate;
+}
+function theraLogin(){
+  if(lsGet('ca_thera')==='1'){ theraSetUnlocked(false); return; }
+  var p=prompt(T[lang].th_pw);
+  if(p===null) return;
+  if(caHash(p)===THERA_HASH){ theraSetUnlocked(true); }
+  else { alert(T[lang].th_wrong); }
+}
+
 /* ---------- başlat ---------- */
 setLang(lang);
 showTab('game');
 renderCustomList();
+if(lsGet('ca_thera')==='1') theraSetUnlocked(true);
 </script>
 </body>
 </html>
